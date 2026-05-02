@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -59,6 +59,8 @@ interface Props {
 
 export function IncidentMap({ incidents, selectedId, onSelect }: Props) {
   const mapRef = useRef<L.Map | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const points = useMemo(
     () =>
