@@ -119,6 +119,7 @@ export function IncidentMap({ incidents, selectedId, onSelect }: Props) {
           );
         })}
       </MapContainer>
+      )}
       {points.length === 0 && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 text-xs text-muted-foreground">
           No geo-located incidents yet
