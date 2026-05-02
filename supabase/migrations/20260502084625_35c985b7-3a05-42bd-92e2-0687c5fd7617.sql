@@ -1,0 +1,2 @@
+UPDATE public.incidents SET lat = 12.9716, lng = 77.5946 WHERE id = '69b26ecd-5cdd-4192-ba76-13acf1d40c57';
+UPDATE public.incidents SET lat = 12.9759, lng = 77.6063 WHERE id = '8fd5c91f-20d1-4147-b790-6e9465060db4';
