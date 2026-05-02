@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useIncidents } from "@/hooks/useIncidents";
@@ -7,7 +7,9 @@ import { useAudioBeep } from "@/hooks/useAudioBeep";
 import { LoginPage } from "./LoginPage";
 import { IncidentList } from "./IncidentList";
 import { IncidentDetail } from "./IncidentDetail";
-import { ShieldAlert, LogOut, Radio } from "lucide-react";
+import { StatsBar } from "./StatsBar";
+import { IncidentMap } from "./IncidentMap";
+import { ShieldAlert, LogOut, Radio, Map as MapIcon } from "lucide-react";
 import { Toaster } from "sonner";
 
 export function Dashboard() {
@@ -15,7 +17,6 @@ export function Dashboard() {
   const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    // Set up listener FIRST
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_e, s) => {
@@ -44,16 +45,33 @@ export function Dashboard() {
   );
 }
 
+const FILTERS = ["All", "Red", "Amber", "Green"] as const;
+type Filter = (typeof FILTERS)[number];
+
 function DispatchView() {
   const beep = useAudioBeep();
   const { incidents, loading, patch } = useIncidents(() => beep());
   const { responders } = useResponders();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<Filter>("All");
+  const [clock, setClock] = useState(new Date());
 
-  // Auto-select first incident on load
   useEffect(() => {
-    if (!selectedId && incidents.length > 0) setSelectedId(incidents[0].id);
-  }, [incidents, selectedId]);
+    const t = setInterval(() => setClock(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const filtered = useMemo(
+    () =>
+      filter === "All"
+        ? incidents
+        : incidents.filter((i) => i.severity === filter),
+    [incidents, filter],
+  );
+
+  useEffect(() => {
+    if (!selectedId && filtered.length > 0) setSelectedId(filtered[0].id);
+  }, [filtered, selectedId]);
 
   const selected = incidents.find((i) => i.id === selectedId) ?? null;
 
@@ -76,6 +94,12 @@ function DispatchView() {
         </div>
 
         <div className="flex items-center gap-3">
+          <div className="hidden font-mono text-xs text-muted-foreground md:block">
+            {clock.toLocaleTimeString([], { hour12: false })}{" "}
+            <span className="text-foreground/70">
+              · {clock.toLocaleDateString()}
+            </span>
+          </div>
           <div className="hidden items-center gap-1.5 rounded-md bg-green-500/10 px-2 py-1 text-[11px] font-semibold text-green-400 ring-1 ring-green-500/30 sm:flex">
             <Radio className="h-3 w-3" />
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-400" />
@@ -91,6 +115,11 @@ function DispatchView() {
         </div>
       </header>
 
+      {/* Stats */}
+      <div className="px-4 pt-4">
+        <StatsBar incidents={incidents} />
+      </div>
+
       {/* Two pane */}
       <main className="flex flex-1 flex-col gap-4 p-4 md:flex-row">
         {/* Left */}
@@ -104,12 +133,47 @@ function DispatchView() {
                 Active Incidents
               </h2>
               <span className="rounded-md bg-white/5 px-2 py-0.5 font-mono text-[11px] text-muted-foreground ring-1 ring-white/10">
-                {incidents.length}
+                {filtered.length}/{incidents.length}
               </span>
             </div>
+
+            {/* Severity filter */}
+            <div className="mb-3 flex gap-1 rounded-xl border border-white/10 bg-black/30 p-1">
+              {FILTERS.map((f) => {
+                const active = filter === f;
+                const dot =
+                  f === "Red"
+                    ? "bg-severity-red"
+                    : f === "Amber"
+                      ? "bg-severity-amber"
+                      : f === "Green"
+                        ? "bg-severity-green"
+                        : "";
+                return (
+                  <button
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-semibold uppercase tracking-wide transition focus:outline-none focus:ring-2 focus:ring-primary ${
+                      active
+                        ? "bg-white/10 text-foreground ring-1 ring-white/20"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {dot && (
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${dot}`}
+                        aria-hidden
+                      />
+                    )}
+                    {f}
+                  </button>
+                );
+              })}
+            </div>
+
             <div className="flex-1 overflow-y-auto pr-1">
               <IncidentList
-                incidents={incidents}
+                incidents={filtered}
                 loading={loading}
                 selectedId={selectedId}
                 onSelect={setSelectedId}
@@ -119,7 +183,10 @@ function DispatchView() {
         </section>
 
         {/* Right */}
-        <section className="flex flex-1 flex-col" aria-label="Incident detail">
+        <section
+          className="flex flex-1 flex-col gap-4"
+          aria-label="Incident detail"
+        >
           {selected ? (
             <IncidentDetail
               incident={selected}
@@ -141,6 +208,27 @@ function DispatchView() {
               </div>
             </div>
           )}
+
+          {/* Map */}
+          <div className="glass p-4">
+            <div className="mb-2 flex items-center gap-2">
+              <MapIcon className="h-4 w-4 text-primary" aria-hidden />
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Geo Map
+              </h3>
+              {selected?.lat && selected?.lng && (
+                <span className="ml-auto font-mono text-[10px] text-muted-foreground">
+                  LAT {selected.lat.toFixed(4)} · LON{" "}
+                  {selected.lng.toFixed(4)}
+                </span>
+              )}
+            </div>
+            <IncidentMap
+              incidents={incidents}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+            />
+          </div>
         </section>
       </main>
     </div>
