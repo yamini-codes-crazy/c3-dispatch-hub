@@ -14,7 +14,130 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      incident_audit_log: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          field_changed: string
+          id: string
+          incident_id: string
+          new_value: string | null
+          old_value: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          field_changed: string
+          id?: string
+          incident_id: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          field_changed?: string
+          id?: string
+          incident_id?: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_audit_log_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incidents: {
+        Row: {
+          ai_filled: boolean
+          alert_sent: boolean
+          caller_number: string | null
+          created_at: string
+          id: string
+          location: string
+          responder_id: string | null
+          severity: string
+          status: string
+          transcript: string | null
+          type: string
+          vapi_call_id: string | null
+        }
+        Insert: {
+          ai_filled?: boolean
+          alert_sent?: boolean
+          caller_number?: string | null
+          created_at?: string
+          id?: string
+          location?: string
+          responder_id?: string | null
+          severity: string
+          status?: string
+          transcript?: string | null
+          type: string
+          vapi_call_id?: string | null
+        }
+        Update: {
+          ai_filled?: boolean
+          alert_sent?: boolean
+          caller_number?: string | null
+          created_at?: string
+          id?: string
+          location?: string
+          responder_id?: string | null
+          severity?: string
+          status?: string
+          transcript?: string | null
+          type?: string
+          vapi_call_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incidents_responder_id_fkey"
+            columns: ["responder_id"]
+            isOneToOne: false
+            referencedRelation: "responders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      responders: {
+        Row: {
+          available: boolean
+          created_at: string
+          id: string
+          name: string
+          phone: string
+          status: string
+          unit_code: string
+          unit_type: string
+        }
+        Insert: {
+          available?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          phone: string
+          status?: string
+          unit_code: string
+          unit_type: string
+        }
+        Update: {
+          available?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string
+          status?: string
+          unit_code?: string
+          unit_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
