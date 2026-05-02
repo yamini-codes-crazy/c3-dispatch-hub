@@ -59,6 +59,8 @@ export type Database = {
           caller_number: string | null
           created_at: string
           id: string
+          lat: number | null
+          lng: number | null
           location: string
           responder_id: string | null
           severity: string
@@ -73,6 +75,8 @@ export type Database = {
           caller_number?: string | null
           created_at?: string
           id?: string
+          lat?: number | null
+          lng?: number | null
           location?: string
           responder_id?: string | null
           severity: string
@@ -87,6 +91,8 @@ export type Database = {
           caller_number?: string | null
           created_at?: string
           id?: string
+          lat?: number | null
+          lng?: number | null
           location?: string
           responder_id?: string | null
           severity?: string
