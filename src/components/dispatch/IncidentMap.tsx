@@ -82,6 +82,7 @@ export function IncidentMap({ incidents, selectedId, onSelect }: Props) {
 
   return (
     <div className="glass-inset relative h-[280px] overflow-hidden">
+      {mounted && (
       <MapContainer
         center={initialCenter}
         zoom={12}
